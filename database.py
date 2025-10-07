@@ -1,8 +1,8 @@
 import os
 from datetime import datetime
 
-# Check if we're on Vercel (PostgreSQL) or local (SQLite)
-DATABASE_URL = os.environ.get('POSTGRES_URL')
+# Check if we're on Render/Cloud (PostgreSQL) or local (SQLite)
+DATABASE_URL = os.environ.get('DATABASE_URL') or os.environ.get('POSTGRES_URL')
 
 if DATABASE_URL:
     # PostgreSQL for Vercel
