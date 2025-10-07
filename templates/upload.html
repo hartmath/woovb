@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Video - WOOVB</title>
+    <link rel="icon" type="image/jpeg" href="{{ url_for('static', filename='img/logo.jpg') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#9b87f5",
+                        "primary-dark": "#7c3aed",
+                        "background-dark": "#1a1530",
+                    },
+                    fontFamily: { display: ["Spline Sans"] },
+                },
+            },
+        };
+    </script>
+</head>
+<body class="font-display bg-background-dark text-white">
+    <!-- Unified Header -->
+    <header class="border-b border-white/10 px-4 md:px-10 py-3 md:py-4 sticky top-0 bg-background-dark/95 backdrop-blur-lg z-50">
+        <div class="flex items-center justify-between">
+            <a href="{{ url_for('home') }}" class="flex items-center gap-2 md:gap-3 hover:opacity-80 transition-opacity">
+                <img src="{{ url_for('static', filename='img/logo.jpg') }}" alt="WOOVB" class="h-8 w-8 md:h-10 md:w-10 rounded-lg">
+                <h1 class="text-lg md:text-xl font-bold text-white">WOOVB</h1>
+            </a>
+            <nav class="hidden md:flex items-center gap-8">
+                <a href="{{ url_for('home') }}" class="text-sm font-medium text-white/60 hover:text-white transition-colors">Home</a>
+                <a href="{{ url_for('dashboard') }}" class="text-sm font-medium text-white/60 hover:text-white transition-colors">My Videos</a>
+                <a href="{{ url_for('upload_page') }}" class="text-sm font-medium text-white/90 hover:text-white transition-colors">Upload</a>
+                <a href="{{ url_for('videos') }}" class="text-sm font-medium text-white/60 hover:text-white transition-colors">Browse All</a>
+            </nav>
+            <div class="hidden md:flex items-center gap-4">
+                <div class="size-10 rounded-full bg-primary flex items-center justify-center text-white font-bold">
+                    {{ session.username[0].upper() }}
+                </div>
+                <a href="{{ url_for('logout') }}" class="text-sm font-medium text-white/60 hover:text-white transition-colors">Logout</a>
+            </div>
+            <div class="md:hidden size-10 rounded-full bg-primary flex items-center justify-center text-white font-bold">
+                {{ session.username[0].upper() }}
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 py-4 md:py-8 sm:px-6 lg:px-8 pb-24 md:pb-8">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="mb-6 space-y-3">
+                    {% for category, message in messages %}
+                        <div class="rounded-lg px-4 py-3 text-sm font-medium backdrop-blur-lg {% if category == 'error' %}bg-red-500/20 text-red-200 border border-red-500/50{% else %}bg-green-500/20 text-green-200 border border-green-500/50{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Upload Header -->
+        <div class="text-center mb-6 md:mb-8">
+            <div class="w-20 h-20 md:w-24 md:h-24 mx-auto mb-4 rounded-full bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center">
+                <svg class="w-10 h-10 md:w-12 md:h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                </svg>
+            </div>
+            <h1 class="text-2xl md:text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent">
+                Upload Your Video
+            </h1>
+            <p class="text-white/60 text-sm md:text-lg">Share your content with the WOOVB community</p>
+        </div>
+
+        <!-- Upload Form -->
+        <div class="bg-white/5 backdrop-blur-lg rounded-xl md:rounded-2xl p-4 md:p-8 border border-white/10">
+            <form id="uploadForm" enctype="multipart/form-data" class="space-y-4 md:space-y-6">
+                <!-- Video File Upload -->
+                <div>
+                    <label class="block text-sm md:text-base font-semibold mb-3">Choose Video File</label>
+                    <div class="relative">
+                        <input type="file" id="video" name="video" accept="video/*" required class="hidden">
+                        <label for="video" id="dropZone" class="flex flex-col items-center justify-center gap-3 w-full rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 px-4 py-10 md:py-16 cursor-pointer transition-all group">
+                            <div class="w-20 h-20 md:w-24 md:h-24 rounded-full bg-primary/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <svg class="w-10 h-10 md:w-12 md:h-12 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                </svg>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-white font-bold text-base md:text-xl mb-1" id="fileText">Tap or Click to Select Video</p>
+                                <p class="text-white/40 text-xs md:text-sm">Drag and drop your video here</p>
+                                <p class="text-white/30 text-xs mt-2">MP4, MOV, AVI • Max 500MB</p>
+                            </div>
+                        </label>
+                    </div>
+                    
+                    <!-- Selected File Preview -->
+                    <div id="filePreview" class="hidden mt-4 p-4 bg-white/5 rounded-xl border border-primary/30">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-primary/20 flex items-center justify-center flex-shrink-0">
+                                <svg class="w-6 h-6 md:w-7 md:h-7 text-primary" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"></path>
+                                </svg>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p id="fileName" class="text-sm md:text-base text-white font-semibold truncate"></p>
+                                <p id="fileSize" class="text-xs md:text-sm text-white/50 mt-1"></p>
+                            </div>
+                            <button type="button" id="clearFile" class="p-2 hover:bg-white/10 rounded-lg transition-colors">
+                                <svg class="w-5 h-5 md:w-6 md:h-6 text-white/60 hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Title Input -->
+                <div>
+                    <label class="block text-sm md:text-base font-semibold mb-2" for="title">Video Title *</label>
+                    <input type="text" id="title" name="title" required 
+                        class="w-full rounded-xl border-2 border-primary/20 bg-white/5 px-4 py-3 md:py-4 text-white text-sm md:text-base placeholder-white/40 focus:border-primary focus:outline-none transition-colors"
+                        placeholder="Give your video an awesome title">
+                </div>
+
+                <!-- Description Input -->
+                <div>
+                    <label class="block text-sm md:text-base font-semibold mb-2" for="description">Description</label>
+                    <textarea id="description" name="description" rows="4"
+                        class="w-full rounded-xl border-2 border-primary/20 bg-white/5 px-4 py-3 md:py-4 text-white text-sm md:text-base placeholder-white/40 focus:border-primary focus:outline-none transition-colors resize-none"
+                        placeholder="Tell viewers what your video is about..."></textarea>
+                    <p class="text-xs text-white/40 mt-2">Optional: Add a description to help viewers understand your content</p>
+                </div>
+
+                <!-- Upload Progress -->
+                <div id="uploadProgress" class="hidden">
+                    <div class="bg-white/10 rounded-full h-3 overflow-hidden">
+                        <div id="progressBar" class="h-full bg-gradient-to-r from-primary via-purple-500 to-pink-500 transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                    <div class="flex justify-between items-center mt-2">
+                        <p id="progressText" class="text-sm md:text-base text-primary font-semibold">Uploading...</p>
+                        <p id="progressPercent" class="text-sm md:text-base text-white/60 font-semibold">0%</p>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row gap-3 md:gap-4 pt-2">
+                    <button type="submit" id="uploadBtn" class="flex-1 rounded-xl bg-gradient-to-r from-primary to-purple-500 py-3 md:py-4 font-bold text-white text-sm md:text-base transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-primary/30 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span class="flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                            </svg>
+                            <span>Upload Video</span>
+                        </span>
+                    </button>
+                    <a href="{{ url_for('dashboard') }}" class="sm:w-auto rounded-xl border-2 border-white/20 hover:border-white/40 py-3 md:py-4 px-6 md:px-8 font-bold text-white text-sm md:text-base transition-all text-center">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Tips Section -->
+        <div class="mt-6 md:mt-8 bg-white/5 backdrop-blur-lg rounded-xl p-4 md:p-6 border border-white/10">
+            <h3 class="text-base md:text-lg font-bold text-white mb-3 md:mb-4">Upload Tips</h3>
+            <ul class="space-y-2 text-xs md:text-sm text-white/70">
+                <li class="flex items-start gap-2">
+                    <svg class="w-5 h-5 text-primary flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span>Upload videos in MP4, MOV, or AVI format for best compatibility</span>
+                </li>
+                <li class="flex items-start gap-2">
+                    <svg class="w-5 h-5 text-primary flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span>Maximum file size is 500MB - compress larger files before uploading</span>
+                </li>
+                <li class="flex items-start gap-2">
+                    <svg class="w-5 h-5 text-primary flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span>Choose a clear, descriptive title to help viewers find your content</span>
+                </li>
+                <li class="flex items-start gap-2">
+                    <svg class="w-5 h-5 text-primary flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span>Add a detailed description to engage your audience</span>
+                </li>
+            </ul>
+        </div>
+    </main>
+
+    <!-- Mobile Bottom Menu -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-background-dark/95 backdrop-blur-lg border-t border-white/10 z-50">
+        <div class="flex items-center justify-around py-3">
+            <a href="{{ url_for('home') }}" class="flex flex-col items-center gap-1 px-4 py-2 text-white/60">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M219.31,108.68l-80-80a16,16,0,0,0-22.62,0l-80,80A15.87,15.87,0,0,0,32,120v96a8,8,0,0,0,8,8h64a8,8,0,0,0,8-8V160h32v56a8,8,0,0,0,8,8h64a8,8,0,0,0,8-8V120A15.87,15.87,0,0,0,219.31,108.68Z"></path>
+                </svg>
+                <span class="text-xs font-medium">Home</span>
+            </a>
+            
+            <a href="{{ url_for('upload_page') }}" class="flex flex-col items-center gap-1 px-4 py-2 text-white/90">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M213.66,82.34l-56-56A8,8,0,0,0,152,24H56A16,16,0,0,0,40,40V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V88A8,8,0,0,0,213.66,82.34ZM160,51.31,188.69,80H160ZM200,216H56V40h88V88a8,8,0,0,0,8,8h48V216Zm-42.34-61.66a8,8,0,0,1,0,11.32l-24,24a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L120,164.69V120a8,8,0,0,1,16,0v44.69l10.34-10.35A8,8,0,0,1,157.66,154.34Z"></path>
+                </svg>
+                <span class="text-xs font-medium">Upload</span>
+            </a>
+            
+            <a href="{{ url_for('videos') }}" class="flex flex-col items-center gap-1 px-4 py-2 text-white/60">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M216,40H40A16,16,0,0,0,24,56V168a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM40,56H216V168H40ZM208,208H48a8,8,0,0,1,0-16H208a8,8,0,0,1,0,16Z"></path>
+                </svg>
+                <span class="text-xs font-medium">Browse</span>
+            </a>
+            
+            <a href="{{ url_for('dashboard') }}" class="flex flex-col items-center gap-1 px-4 py-2 text-white/60">
+                <div class="size-6 rounded-full bg-primary flex items-center justify-center text-white text-xs font-bold">
+                    {{ session.username[0].upper() }}
+                </div>
+                <span class="text-xs font-medium">Profile</span>
+            </a>
+        </div>
+    </nav>
+
+    <script>
+        const videoInput = document.getElementById('video');
+        const filePreview = document.getElementById('filePreview');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const fileText = document.getElementById('fileText');
+        const dropZone = document.getElementById('dropZone');
+        const clearFileBtn = document.getElementById('clearFile');
+
+        // File selection handler
+        videoInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                showFilePreview(file);
+            }
+        });
+
+        // Clear file handler
+        clearFileBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            videoInput.value = '';
+            filePreview.classList.add('hidden');
+            fileText.textContent = 'Tap or Click to Select Video';
+            dropZone.classList.remove('border-primary', 'bg-primary/10');
+            dropZone.classList.add('border-primary/30', 'bg-primary/5');
+        });
+
+        // Show file preview
+        function showFilePreview(file) {
+            const sizeMB = (file.size / 1024 / 1024).toFixed(2);
+            fileName.textContent = file.name;
+            fileSize.textContent = `${sizeMB} MB • ${file.type}`;
+            filePreview.classList.remove('hidden');
+            fileText.textContent = '✓ Video Selected';
+            dropZone.classList.remove('border-primary/30', 'bg-primary/5');
+            dropZone.classList.add('border-primary', 'bg-primary/10');
+        }
+
+        // Drag and drop handlers
+        dropZone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            dropZone.classList.add('border-primary', 'bg-primary/15', 'scale-[1.02]');
+        });
+
+        dropZone.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            if (!videoInput.files.length) {
+                dropZone.classList.remove('border-primary', 'bg-primary/15', 'scale-[1.02]');
+                dropZone.classList.add('border-primary/30', 'bg-primary/5');
+            }
+        });
+
+        dropZone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            dropZone.classList.remove('scale-[1.02]');
+            const files = e.dataTransfer.files;
+            if (files.length && files[0].type.startsWith('video/')) {
+                videoInput.files = files;
+                showFilePreview(files[0]);
+            } else {
+                alert('Please select a valid video file');
+            }
+        });
+
+        // Upload form handler
+        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const uploadBtn = document.getElementById('uploadBtn');
+            const progressDiv = document.getElementById('uploadProgress');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const progressPercent = document.getElementById('progressPercent');
+            
+            uploadBtn.disabled = true;
+            uploadBtn.innerHTML = '<span class="flex items-center justify-center gap-2"><svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span>Uploading...</span></span>';
+            progressDiv.classList.remove('hidden');
+            
+            const xhr = new XMLHttpRequest();
+            
+            xhr.upload.addEventListener('progress', function(e) {
+                if (e.lengthComputable) {
+                    const percentComplete = (e.loaded / e.total) * 100;
+                    progressBar.style.width = percentComplete + '%';
+                    const percent = Math.round(percentComplete);
+                    progressText.textContent = `Uploading... ${percent}%`;
+                    progressPercent.textContent = `${percent}%`;
+                }
+            });
+            
+            xhr.addEventListener('load', function() {
+                if (xhr.status === 200) {
+                    const response = JSON.parse(xhr.responseText);
+                    progressText.textContent = '✓ Upload Complete!';
+                    progressPercent.textContent = '100%';
+                    progressBar.style.width = '100%';
+                    
+                    setTimeout(() => {
+                        window.location.href = '{{ url_for("dashboard") }}';
+                    }, 1000);
+                } else {
+                    alert('Upload failed. Please try again.');
+                    resetUploadForm();
+                }
+            });
+            
+            xhr.addEventListener('error', function() {
+                alert('Upload failed. Please check your connection and try again.');
+                resetUploadForm();
+            });
+            
+            xhr.open('POST', '{{ url_for("upload_video") }}');
+            xhr.send(formData);
+        });
+
+        function resetUploadForm() {
+            const uploadBtn = document.getElementById('uploadBtn');
+            const progressDiv = document.getElementById('uploadProgress');
+            uploadBtn.disabled = false;
+            uploadBtn.innerHTML = '<span class="flex items-center justify-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg><span>Upload Video</span></span>';
+            progressDiv.classList.add('hidden');
+        }
+
+        // Auto-dismiss flash messages
+        setTimeout(() => {
+            const flashMessages = document.querySelectorAll('.backdrop-blur-lg');
+            flashMessages.forEach(msg => {
+                if (msg.textContent.includes('success') || msg.textContent.includes('uploaded')) {
+                    msg.style.transition = 'opacity 0.3s ease-out';
+                    msg.style.opacity = '0';
+                    setTimeout(() => msg.remove(), 300);
+                }
+            });
+        }, 5000);
+    </script>
+</body>
+</html>
+

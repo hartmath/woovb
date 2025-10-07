@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WOOVB - Sign In/Up</title>
+    <link rel="icon" type="image/jpeg" href="{{ url_for('static', filename='img/logo.jpg') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#9b87f5",
+                        "primary-dark": "#7c3aed",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#1a1530",
+                    },
+                    fontFamily: {
+                        display: ["Spline Sans"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.25rem",
+                        lg: "0.5rem",
+                        xl: "0.75rem",
+                        full: "9999px",
+                    },
+                },
+            },
+        };
+    </script>
+    <style>
+        .form-input-custom {
+            @apply w-full rounded-lg border-2 bg-white/5 px-6 py-4 text-lg text-white transition-colors duration-200 ease-in-out;
+            @apply border-primary/20 dark:border-primary/30;
+            @apply focus:border-primary focus:outline-none focus:ring-0 focus:bg-white/10;
+            @apply placeholder:text-white/40 dark:placeholder:text-white/30;
+            min-width: 100%;
+        }
+        body {
+            background: linear-gradient(135deg, #1a1530 0%, #2d1b69 50%, #1a1530 100%);
+            min-height: 100vh;
+        }
+    </style>
+</head>
+<body class="font-display text-white">
+    <div class="flex min-h-screen flex-col items-center justify-center p-4">
+        <div class="w-full max-w-2xl rounded-xl bg-white/5 backdrop-blur-xl p-10 shadow-2xl border border-white/10">
+            <div class="mb-8 text-center">
+                <div class="flex items-center justify-center gap-3 mb-4">
+                    <img src="{{ url_for('static', filename='img/logo.jpg') }}" alt="WOOVB" class="h-16 w-16 rounded-lg shadow-lg shadow-primary/50">
+                    <h1 class="text-3xl font-bold text-white">
+                        WOOVB
+                    </h1>
+                </div>
+                <p class="text-sm text-white/60">
+                    Sign in to continue or create an account.
+                </p>
+            </div>
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="mb-4 rounded-lg px-4 py-3 text-sm font-medium {% if category == 'error' %}bg-red-500/20 text-red-200 border border-red-500/50{% else %}bg-green-500/20 text-green-200 border border-green-500/50{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="mb-6 space-y-4">
+                <div class="flex space-x-2 rounded-lg bg-primary/10 p-1">
+                    <button class="w-full rounded-md py-2 text-sm font-semibold transition-colors duration-300 {% if active_tab == 'login' %}bg-primary text-white{% else %}text-white/60 hover:bg-primary/20{% endif %}" id="login-tab" type="button">
+                        Log In
+                    </button>
+                    <button class="w-full rounded-md py-2 text-sm font-semibold transition-colors duration-300 {% if active_tab == 'register' %}bg-primary text-white{% else %}text-white/60 hover:bg-primary/20{% endif %}" id="register-tab" type="button">
+                        Register
+                    </button>
+                </div>
+            </div>
+
+            <!-- Login Form -->
+            <form class="space-y-5 {% if active_tab == 'register' %}hidden{% endif %}" id="login-form" method="POST" action="{{ url_for('login') }}">
+                <div>
+                    <label class="sr-only" for="login-email">Email</label>
+                    <input class="form-input-custom" id="login-email" name="email" placeholder="Email" type="email" required>
+                </div>
+                <div>
+                    <label class="sr-only" for="login-password">Password</label>
+                    <input class="form-input-custom" id="login-password" name="password" placeholder="Password" type="password" required>
+                </div>
+                <div class="text-right">
+                    <a class="text-sm font-medium text-primary hover:underline" href="#">Forgot password?</a>
+                </div>
+                <div>
+                    <button class="w-full rounded-lg bg-primary py-3 font-semibold text-white transition-all duration-200 hover:bg-primary-dark hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-primary/50" type="submit">
+                        Log In
+                    </button>
+                </div>
+            </form>
+
+            <!-- Register Form -->
+            <form class="space-y-5 {% if active_tab != 'register' %}hidden{% endif %}" id="register-form" method="POST" action="{{ url_for('register') }}">
+                <div>
+                    <label class="sr-only" for="register-username">Username</label>
+                    <input class="form-input-custom" id="register-username" name="username" placeholder="Username" type="text" required>
+                </div>
+                <div>
+                    <label class="sr-only" for="register-email">Email</label>
+                    <input class="form-input-custom" id="register-email" name="email" placeholder="Email" type="email" required>
+                </div>
+                <div>
+                    <label class="sr-only" for="register-password">Password</label>
+                    <input class="form-input-custom" id="register-password" name="password" placeholder="Password (min 6 characters)" type="password" required>
+                </div>
+                <div>
+                    <label class="sr-only" for="confirm-password">Confirm Password</label>
+                    <input class="form-input-custom" id="confirm-password" name="confirm_password" placeholder="Confirm Password" type="password" required>
+                </div>
+                <div>
+                    <button class="w-full rounded-lg bg-primary py-3 font-semibold text-white transition-all duration-200 hover:bg-primary-dark hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-primary/50" type="submit">
+                        Register
+                    </button>
+                </div>
+            </form>
+
+            <div class="mt-6 text-center">
+                <a href="{{ url_for('home') }}" class="text-sm text-white/60 hover:text-white transition-colors">
+                    ← Back to Home
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const loginTab = document.getElementById('login-tab');
+        const registerTab = document.getElementById('register-tab');
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+
+        loginTab.addEventListener('click', () => {
+            loginTab.classList.add('bg-primary', 'text-white');
+            loginTab.classList.remove('text-white/60', 'hover:bg-primary/20');
+            registerTab.classList.remove('bg-primary', 'text-white');
+            registerTab.classList.add('text-white/60', 'hover:bg-primary/20');
+            loginForm.classList.remove('hidden');
+            registerForm.classList.add('hidden');
+            
+            // Update URL without reload
+            const url = new URL(window.location);
+            url.searchParams.set('tab', 'login');
+            window.history.pushState({}, '', url);
+        });
+
+        registerTab.addEventListener('click', () => {
+            registerTab.classList.add('bg-primary', 'text-white');
+            registerTab.classList.remove('text-white/60', 'hover:bg-primary/20');
+            loginTab.classList.remove('bg-primary', 'text-white');
+            loginTab.classList.add('text-white/60', 'hover:bg-primary/20');
+            registerForm.classList.remove('hidden');
+            loginForm.classList.add('hidden');
+            
+            // Update URL without reload
+            const url = new URL(window.location);
+            url.searchParams.set('tab', 'register');
+            window.history.pushState({}, '', url);
+        });
+
+        // Check URL parameter on load
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('tab') === 'register') {
+            registerTab.click();
+        }
+    </script>
+</body>
+</html>
+
