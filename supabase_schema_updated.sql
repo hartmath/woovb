@@ -30,6 +30,9 @@ CREATE INDEX IF NOT EXISTS idx_videos_video_id ON public.videos (video_id);
 CREATE INDEX IF NOT EXISTS idx_videos_user_id ON public.videos (user_id);
 CREATE INDEX IF NOT EXISTS idx_users_email ON public.users (email);
 
+-- Drop existing function if it exists (to avoid parameter name conflicts)
+DROP FUNCTION IF EXISTS increment_video_views(TEXT);
+
 -- Create function to increment video views
 CREATE OR REPLACE FUNCTION increment_video_views(video_id_param TEXT)
 RETURNS VOID AS $$
