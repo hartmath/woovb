@@ -4,7 +4,9 @@ import { supabase, bucketName } from '../lib/supabase'
 export default function VideoCard({ video }) {
   const thumbnailUrl = video.thumbnail
     ? supabase.storage.from(bucketName).getPublicUrl(video.thumbnail).data.publicUrl
-    : null
+    : (video.filename
+        ? supabase.storage.from(bucketName).getPublicUrl(video.filename).data.publicUrl
+        : null)
 
   return (
     <Link href={`/watch/${video.video_id}`}>

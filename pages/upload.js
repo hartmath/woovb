@@ -14,6 +14,76 @@ export default function Upload() {
   const [previewUrl, setPreviewUrl] = useState(null)
   const router = useRouter()
 
+  // Generate a thumbnail image from the selected video file (client-side)
+  async function generateThumbnailFromVideo(file) {
+    return new Promise((resolve, reject) => {
+      try {
+        const video = document.createElement('video')
+        video.preload = 'metadata'
+        video.muted = true
+        video.playsInline = true
+        video.src = URL.createObjectURL(file)
+
+        const cleanup = () => {
+          URL.revokeObjectURL(video.src)
+        }
+
+        video.onloadeddata = () => {
+          // Seek to ~2s or a fraction of duration
+          const targetTime = Math.min(2, Math.max(0.1, (video.duration || 1) / 3))
+          video.currentTime = targetTime
+        }
+
+        video.onseeked = () => {
+          try {
+            // Draw to 16:9 canvas (640x360)
+            const canvas = document.createElement('canvas')
+            const targetWidth = 640
+            const targetHeight = 360
+            canvas.width = targetWidth
+            canvas.height = targetHeight
+            const ctx = canvas.getContext('2d')
+
+            // Cover behavior: scale and center without letterboxing
+            const videoRatio = video.videoWidth / video.videoHeight
+            const canvasRatio = targetWidth / targetHeight
+            let sx = 0, sy = 0, sWidth = video.videoWidth, sHeight = video.videoHeight
+            if (videoRatio > canvasRatio) {
+              // video wider than canvas -> crop sides
+              sWidth = video.videoHeight * canvasRatio
+              sx = (video.videoWidth - sWidth) / 2
+            } else if (videoRatio < canvasRatio) {
+              // video taller than canvas -> crop top/bottom
+              sHeight = video.videoWidth / canvasRatio
+              sy = (video.videoHeight - sHeight) / 2
+            }
+
+            ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, targetWidth, targetHeight)
+            canvas.toBlob(
+              (blob) => {
+                cleanup()
+                if (blob) resolve(blob)
+                else reject(new Error('Failed to create thumbnail blob'))
+              },
+              'image/jpeg',
+              0.82
+            )
+          } catch (err) {
+            cleanup()
+            reject(err)
+          }
+        }
+
+        video.onerror = () => {
+          cleanup()
+          reject(new Error('Unable to load video for thumbnail'))
+        }
+      } catch (error) {
+        reject(error)
+      }
+    })
+  }
+
   useEffect(() => {
     const userId = localStorage.getItem('userId')
     const username = localStorage.getItem('username')
@@ -84,8 +154,24 @@ export default function Upload() {
 
       if (uploadError) throw uploadError
 
-      // Create thumbnail (use a placeholder for now - you can enhance this later)
-      const thumbnailFilename = `thumb_${videoId}.jpg`
+      // Create thumbnail client-side and upload
+      let thumbnailKey = null
+      try {
+        const thumbBlob = await generateThumbnailFromVideo(videoFile)
+        const thumbPath = `thumbnails/${videoId}.jpg`
+        const { error: thumbErr } = await supabase.storage
+          .from(bucketName)
+          .upload(thumbPath, thumbBlob, {
+            cacheControl: '3600',
+            upsert: true,
+            contentType: 'image/jpeg',
+          })
+        if (!thumbErr) {
+          thumbnailKey = thumbPath
+        }
+      } catch (_) {
+        // best-effort: continue without thumbnail
+      }
 
       // Save to database
       const { data: videoData, error: dbError } = await supabase
@@ -96,7 +182,7 @@ export default function Upload() {
             title: title.trim(),
             description: description.trim(),
             filename: filename,
-            thumbnail: null, // Can be enhanced later with actual thumbnail generation
+            thumbnail: thumbnailKey,
             user_id: parseInt(user.id),
           },
         ])

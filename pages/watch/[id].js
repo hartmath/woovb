@@ -31,11 +31,16 @@ export default function Watch() {
         const { default: videojs } = await import('video.js')
         if (!isMounted) return
 
+        const posterUrl = video.thumbnail
+          ? supabase.storage.from(bucketName).getPublicUrl(video.thumbnail).data.publicUrl
+          : undefined
+
         playerRef.current = videojs(videoRef.current, {
           controls: true,
           fluid: true,
           aspectRatio: '16:9',
           preload: 'metadata',
+          poster: posterUrl,
           sources: [
             {
               src: videoUrl,
