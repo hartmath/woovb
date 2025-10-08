@@ -92,18 +92,25 @@
                     <!-- Featured Video Section -->
                     <div class="lg:col-span-2">
                         {% if featured_video %}
-                        <a href="{{ url_for('watch', video_id=featured_video.video_id) }}" class="block">
-                            <div class="relative aspect-video w-full overflow-hidden rounded-xl bg-gradient-to-br from-purple-900 to-indigo-900">
-                                <video class="w-full h-full object-cover" preload="metadata">
-                                    <source src="{{ url_for('serve_video', filename=featured_video.filename) }}#t=2" type="video/mp4">
-                                </video>
-                                <div class="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-[1px] group hover:bg-black/20 transition-all">
-                                    <button class="flex size-20 items-center justify-center rounded-full bg-primary/90 text-white backdrop-blur-sm transition-transform group-hover:scale-110 group-hover:bg-primary">
+                        <a href="{{ url_for('watch', video_id=featured_video.video_id) }}" class="block group">
+                            <div class="relative aspect-video w-full overflow-hidden rounded-xl bg-gradient-to-br from-purple-900 via-indigo-900 to-purple-800">
+                                <!-- Video Thumbnail Overlay -->
+                                <div class="absolute inset-0 flex flex-col items-center justify-center p-8">
+                                    <!-- Video Icon Background -->
+                                    <div class="absolute inset-0 flex items-center justify-center opacity-20">
+                                        <svg class="w-40 h-40 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"></path>
+                                        </svg>
+                                    </div>
+                                    <!-- Play Button -->
+                                    <button class="flex size-20 items-center justify-center rounded-full bg-primary/90 text-white backdrop-blur-sm transition-transform group-hover:scale-110 group-hover:bg-primary shadow-2xl shadow-primary/50">
                                         <svg fill="currentColor" height="32" viewBox="0 0 256 256" width="32" xmlns="http://www.w3.org/2000/svg">
                                             <path d="M240,128a15.74,15.74,0,0,1-7.6,13.51L88.32,229.65a16,16,0,0,1-16.2.3A15.86,15.86,0,0,1,64,216.13V39.87a15.86,15.86,0,0,1,8.12-13.82,16,16,0,0,1,16.2.3L232.4,114.49A15.74,15.74,0,0,1,240,128Z"></path>
                                         </svg>
                                     </button>
                                 </div>
+                                <!-- Gradient Overlay -->
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 group-hover:from-black/40 transition-all"></div>
                             </div>
                         </a>
                         <div class="mt-4">
@@ -154,20 +161,31 @@
                     {% endif %}
                     <div class="mt-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                         {% for video in videos %}
-                        <a href="{{ url_for('watch', video_id=video.video_id) }}" class="group block bg-white/5 backdrop-blur-lg rounded-lg p-4 border border-white/10 hover:border-primary/50 transition-all hover:scale-[1.02]">
-                            <div class="flex items-start gap-4">
-                                <div class="w-16 h-16 flex-shrink-0 rounded-lg bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center">
-                                    <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"></path>
+                        <a href="{{ url_for('watch', video_id=video.video_id) }}" class="group block">
+                            <!-- Video Thumbnail -->
+                            <div class="relative aspect-video w-full overflow-hidden rounded-xl bg-gradient-to-br from-purple-800 via-indigo-800 to-purple-700 mb-3">
+                                <div class="absolute inset-0 flex items-center justify-center opacity-30">
+                                    <svg class="w-16 h-16 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"></path>
                                     </svg>
                                 </div>
-                                <div class="flex-1 min-w-0">
-                                    <h3 class="text-base font-semibold text-white mb-2 line-clamp-2">{{ video.title }}</h3>
-                                    <p class="text-sm text-white/60">{{ video.username }}</p>
-                                    <div class="flex items-center gap-3 mt-2 text-xs text-white/40">
-                                        <span>{{ video.views }} views</span>
-                                        <span>{{ video.created_at[:10] }}</span>
+                                <!-- Play button overlay -->
+                                <div class="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/10 transition-all">
+                                    <div class="w-12 h-12 rounded-full bg-primary/90 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                        <svg class="w-5 h-5 text-white ml-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"></path>
+                                        </svg>
                                     </div>
+                                </div>
+                            </div>
+                            <!-- Video Info -->
+                            <div>
+                                <h3 class="text-base font-semibold text-white mb-1 line-clamp-2 group-hover:text-primary transition-colors">{{ video.title }}</h3>
+                                <p class="text-sm text-white/60 mb-1">{{ video.username }}</p>
+                                <div class="flex items-center gap-3 text-xs text-white/40">
+                                    <span>{{ video.views }} views</span>
+                                    <span>•</span>
+                                    <span>{{ video.created_at[:10] }}</span>
                                 </div>
                             </div>
                         </a>

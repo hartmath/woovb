@@ -79,9 +79,10 @@
                 class="video-js vjs-big-play-centered"
                 controls
                 preload="auto"
+                crossorigin="anonymous"
                 data-setup='{"fluid": true, "aspectRatio": "16:9"}'>
-                <source src="{{ url_for('serve_video', filename=video.filename) }}" type="video/mp4">
-                Your browser does not support the video tag.
+                <source src="{{ url_for('serve_video', filename=video.filename) }}" type="video/{{ video.filename.split('.')[-1] }}">
+                <p class="text-white p-8">Your browser doesn't support HTML5 video. Please try a different browser or download the video to watch it.</p>
             </video>
         </div>
 
