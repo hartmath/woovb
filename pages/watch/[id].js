@@ -3,7 +3,7 @@ import { useRouter } from 'next/router'
 import Layout from '../../components/Layout'
 import VideoCard from '../../components/VideoCard'
 import { supabase, bucketName } from '../../lib/supabase'
-import videojs from 'video.js'
+// video.js is loaded dynamically on the client to avoid SSR errors
 
 export default function Watch() {
   const [video, setVideo] = useState(null)
@@ -22,42 +22,49 @@ export default function Watch() {
   }, [id])
 
   useEffect(() => {
-    // Initialize Video.js player
-    if (video && videoRef.current && !playerRef.current) {
-      const videoUrl = supabase.storage.from(bucketName).getPublicUrl(video.filename).data.publicUrl
+    let isMounted = true
+    ;(async () => {
+      // Initialize Video.js player on client only
+      if (video && videoRef.current && !playerRef.current && typeof window !== 'undefined') {
+        const videoUrl = supabase.storage.from(bucketName).getPublicUrl(video.filename).data.publicUrl
 
-      playerRef.current = videojs(videoRef.current, {
-        controls: true,
-        fluid: true,
-        aspectRatio: '16:9',
-        preload: 'metadata',
-        sources: [
-          {
-            src: videoUrl,
-            type: `video/${video.filename.split('.').pop()}`,
-          },
-        ],
-      })
+        const { default: videojs } = await import('video.js')
+        if (!isMounted) return
 
-      // Error handling
-      playerRef.current.on('error', function () {
-        const error = playerRef.current.error()
-        console.error('Video error:', error)
+        playerRef.current = videojs(videoRef.current, {
+          controls: true,
+          fluid: true,
+          aspectRatio: '16:9',
+          preload: 'metadata',
+          sources: [
+            {
+              src: videoUrl,
+              type: `video/${video.filename.split('.').pop()}`,
+            },
+          ],
+        })
 
-        const errorMessages = {
-          1: 'Video loading aborted by user',
-          2: 'Network error - could not load video',
-          3: 'Video format not supported by browser',
-          4: 'Video not found or server error',
-        }
+        // Error handling
+        playerRef.current.on('error', function () {
+          const error = playerRef.current?.error?.()
+          console.error('Video error:', error)
 
-        const message = errorMessages[error.code] || 'Unknown error loading video'
-        alert(`⚠️ Video Error\n\n${message}\n\nTry:\n• Refreshing the page\n• Using a different browser\n• Checking your internet connection`)
-      })
-    }
+          const errorMessages = {
+            1: 'Video loading aborted by user',
+            2: 'Network error - could not load video',
+            3: 'Video format not supported by browser',
+            4: 'Video not found or server error',
+          }
+
+          const message = (error && errorMessages[error.code]) || 'Unknown error loading video'
+          alert(`⚠️ Video Error\n\n${message}\n\nTry:\n• Refreshing the page\n• Using a different browser\n• Checking your internet connection`)
+        })
+      }
+    })()
 
     // Cleanup
     return () => {
+      isMounted = false
       if (playerRef.current) {
         playerRef.current.dispose()
         playerRef.current = null
