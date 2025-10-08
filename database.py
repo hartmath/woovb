@@ -47,12 +47,19 @@ if DATABASE_URL:
                 title TEXT NOT NULL,
                 description TEXT,
                 filename TEXT NOT NULL,
+                thumbnail TEXT,
                 user_id INTEGER NOT NULL,
                 views INTEGER DEFAULT 0,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users (id)
             )
         ''')
+        
+        # Add thumbnail column if it doesn't exist (for existing databases)
+        try:
+            cursor.execute('ALTER TABLE videos ADD COLUMN IF NOT EXISTS thumbnail TEXT')
+        except:
+            pass  # Column already exists
         
         conn.commit()
         conn.close()
@@ -88,13 +95,13 @@ if DATABASE_URL:
         conn.close()
         return dict(user) if user else None
     
-    def create_video(video_id, title, description, filename, user_id):
+    def create_video(video_id, title, description, filename, thumbnail, user_id):
         """Create a new video entry"""
         conn = get_db()
         cursor = conn.cursor()
         cursor.execute(
-            'INSERT INTO videos (video_id, title, description, filename, user_id) VALUES (%s, %s, %s, %s, %s) RETURNING id',
-            (video_id, title, description, filename, user_id)
+            'INSERT INTO videos (video_id, title, description, filename, thumbnail, user_id) VALUES (%s, %s, %s, %s, %s, %s) RETURNING id',
+            (video_id, title, description, filename, thumbnail, user_id)
         )
         vid_id = cursor.fetchone()[0]
         conn.commit()
@@ -235,12 +242,23 @@ else:
                 title TEXT NOT NULL,
                 description TEXT,
                 filename TEXT NOT NULL,
+                thumbnail TEXT,
                 user_id INTEGER NOT NULL,
                 views INTEGER DEFAULT 0,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users (id)
             )
         ''')
+        
+        # Add thumbnail column if it doesn't exist (for existing databases)
+        try:
+            cursor.execute('PRAGMA table_info(videos)')
+            columns = [column[1] for column in cursor.fetchall()]
+            if 'thumbnail' not in columns:
+                cursor.execute('ALTER TABLE videos ADD COLUMN thumbnail TEXT')
+                conn.commit()
+        except:
+            pass  # Column already exists
         
         conn.commit()
         conn.close()
@@ -276,13 +294,13 @@ else:
         conn.close()
         return dict(user) if user else None
     
-    def create_video(video_id, title, description, filename, user_id):
+    def create_video(video_id, title, description, filename, thumbnail, user_id):
         """Create a new video entry"""
         conn = get_db()
         cursor = conn.cursor()
         cursor.execute(
-            'INSERT INTO videos (video_id, title, description, filename, user_id) VALUES (?, ?, ?, ?, ?)',
-            (video_id, title, description, filename, user_id)
+            'INSERT INTO videos (video_id, title, description, filename, thumbnail, user_id) VALUES (?, ?, ?, ?, ?, ?)',
+            (video_id, title, description, filename, thumbnail, user_id)
         )
         conn.commit()
         vid_id = cursor.lastrowid

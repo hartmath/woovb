@@ -5,15 +5,19 @@ from datetime import datetime
 import os
 import uuid
 import secrets
+import subprocess
+from PIL import Image
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = secrets.token_hex(16)
 app.config['UPLOAD_FOLDER'] = 'uploads/videos'
+app.config['THUMBNAIL_FOLDER'] = 'uploads/thumbnails'
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max file size (PythonAnywhere limit)
 app.config['ALLOWED_EXTENSIONS'] = {'mp4', 'avi', 'mov', 'mkv', 'webm', 'flv'}
 
-# Create upload directory if it doesn't exist
+# Create upload directories if they don't exist
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+os.makedirs(app.config['THUMBNAIL_FOLDER'], exist_ok=True)
 
 # Import database models and functions
 from database import init_db, create_user, get_user_by_email, create_video, get_all_videos, get_video_by_id, get_user_videos, increment_views, get_all_users, delete_user, delete_video, get_stats, get_user_by_id
@@ -27,6 +31,47 @@ def allowed_file(filename):
 def generate_video_id():
     """Generate a unique video ID"""
     return f"VID-{uuid.uuid4().hex[:12].upper()}"
+
+def generate_thumbnail(video_path, thumbnail_path, time_seconds=2):
+    """
+    Generate a thumbnail from a video file using ffmpeg
+    Falls back to a placeholder if ffmpeg is not available
+    """
+    try:
+        # Try using ffmpeg (best quality)
+        subprocess.run([
+            'ffmpeg',
+            '-i', video_path,
+            '-ss', str(time_seconds),
+            '-vframes', '1',
+            '-vf', 'scale=640:360',
+            '-y',
+            thumbnail_path
+        ], check=True, capture_output=True, timeout=10)
+        return True
+    except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired):
+        # Fallback: Create a simple placeholder image
+        try:
+            from PIL import Image, ImageDraw, ImageFont
+            # Create a 640x360 gradient image
+            img = Image.new('RGB', (640, 360), color=(120, 81, 169))
+            draw = ImageDraw.Draw(img)
+            
+            # Add a play icon
+            center_x, center_y = 320, 180
+            play_points = [
+                (center_x - 40, center_y - 50),
+                (center_x - 40, center_y + 50),
+                (center_x + 50, center_y)
+            ]
+            draw.polygon(play_points, fill=(255, 255, 255))
+            
+            # Save the placeholder
+            img.save(thumbnail_path, 'JPEG', quality=85)
+            return True
+        except Exception as e:
+            print(f"Error creating placeholder thumbnail: {e}")
+            return False
 
 @app.route('/')
 def index():
@@ -139,13 +184,18 @@ def upload_video():
         # Create safe filename
         file_extension = file.filename.rsplit('.', 1)[1].lower()
         filename = f"{video_id}.{file_extension}"
+        thumbnail_filename = f"{video_id}.jpg"
         
-        # Save file
+        # Save video file
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
         
-        # Save to database
-        create_video(video_id, title, description, filename, session['user_id'])
+        # Generate thumbnail
+        thumbnail_path = os.path.join(app.config['THUMBNAIL_FOLDER'], thumbnail_filename)
+        generate_thumbnail(filepath, thumbnail_path)
+        
+        # Save to database with thumbnail
+        create_video(video_id, title, description, filename, thumbnail_filename, session['user_id'])
         
         flash(f'Video uploaded successfully! Video ID: {video_id}', 'success')
         return jsonify({'success': True, 'video_id': video_id})
@@ -186,6 +236,11 @@ def serve_video(filename):
     response.headers['Accept-Ranges'] = 'bytes'
     response.headers['Cache-Control'] = 'no-cache'
     return response
+
+@app.route('/uploads/thumbnails/<filename>')
+def serve_thumbnail(filename):
+    """Serve video thumbnails"""
+    return send_from_directory(app.config['THUMBNAIL_FOLDER'], filename)
 
 @app.route('/search')
 def search():
