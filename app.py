@@ -16,7 +16,7 @@ app.config['ALLOWED_EXTENSIONS'] = {'mp4', 'avi', 'mov', 'mkv', 'webm', 'flv'}
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 # Import database models and functions
-from database import init_db, create_user, get_user_by_email, create_video, get_all_videos, get_video_by_id, get_user_videos, increment_views
+from database import init_db, create_user, get_user_by_email, create_video, get_all_videos, get_video_by_id, get_user_videos, increment_views, get_all_users, delete_user, delete_video, get_stats, get_user_by_id
 
 # Initialize database
 init_db()
@@ -202,6 +202,77 @@ def api_videos():
     
     videos = get_all_videos()
     return jsonify(videos)
+
+# Admin panel routes
+@app.route('/admin')
+def admin_panel():
+    if 'user_id' not in session:
+        flash('Please login to access admin panel', 'error')
+        return redirect(url_for('login'))
+    
+    # Check if user is admin (user_id = 1 or you can add is_admin field)
+    current_user = get_user_by_id(session['user_id'])
+    if not current_user or current_user['id'] != 1:
+        flash('Access denied. Admin only.', 'error')
+        return redirect(url_for('home'))
+    
+    # Get all data
+    users = get_all_users()
+    all_videos = get_all_videos()
+    stats = get_stats()
+    
+    return render_template('admin.html', users=users, videos=all_videos, stats=stats)
+
+@app.route('/admin/delete-user/<int:user_id>', methods=['POST'])
+def admin_delete_user(user_id):
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    # Check if user is admin
+    current_user = get_user_by_id(session['user_id'])
+    if not current_user or current_user['id'] != 1:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    # Don't allow deleting yourself
+    if user_id == session['user_id']:
+        return jsonify({'error': 'Cannot delete your own account'}), 400
+    
+    # Delete user and their videos
+    user_videos = get_user_videos(user_id)
+    for video in user_videos:
+        # Delete video file
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], video['filename'])
+        if os.path.exists(filepath):
+            os.remove(filepath)
+    
+    delete_user(user_id)
+    flash('User deleted successfully', 'success')
+    return jsonify({'success': True})
+
+@app.route('/admin/delete-video/<video_id>', methods=['POST'])
+def admin_delete_video(video_id):
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    # Check if user is admin
+    current_user = get_user_by_id(session['user_id'])
+    if not current_user or current_user['id'] != 1:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    # Get video to delete file
+    video = get_video_by_id(video_id)
+    if video:
+        # Delete video file
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], video['filename'])
+        if os.path.exists(filepath):
+            os.remove(filepath)
+        
+        # Delete from database
+        delete_video(video_id)
+        flash('Video deleted successfully', 'success')
+        return jsonify({'success': True})
+    
+    return jsonify({'error': 'Video not found'}), 404
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

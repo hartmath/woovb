@@ -151,6 +151,53 @@ if DATABASE_URL:
         cursor.execute('UPDATE videos SET views = views + 1 WHERE video_id = %s', (video_id,))
         conn.commit()
         conn.close()
+    
+    # Admin functions
+    def get_all_users():
+        """Get all users for admin panel"""
+        conn = get_db()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        cursor.execute('SELECT id, username, email, created_at FROM users ORDER BY created_at DESC')
+        users = cursor.fetchall()
+        conn.close()
+        return [dict(user) for user in users]
+    
+    def delete_user(user_id):
+        """Delete a user and their videos"""
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute('DELETE FROM users WHERE id = %s', (user_id,))
+        conn.commit()
+        conn.close()
+    
+    def delete_video(video_id):
+        """Delete a video"""
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute('DELETE FROM videos WHERE video_id = %s', (video_id,))
+        conn.commit()
+        conn.close()
+    
+    def get_stats():
+        """Get platform statistics"""
+        conn = get_db()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        
+        cursor.execute('SELECT COUNT(*) as total_users FROM users')
+        total_users = cursor.fetchone()['total_users']
+        
+        cursor.execute('SELECT COUNT(*) as total_videos FROM videos')
+        total_videos = cursor.fetchone()['total_videos']
+        
+        cursor.execute('SELECT COALESCE(SUM(views), 0) as total_views FROM videos')
+        total_views = cursor.fetchone()['total_views']
+        
+        conn.close()
+        return {
+            'total_users': total_users,
+            'total_videos': total_videos,
+            'total_views': total_views
+        }
 
 else:
     # SQLite for local development
@@ -292,3 +339,50 @@ else:
         cursor.execute('UPDATE videos SET views = views + 1 WHERE video_id = ?', (video_id,))
         conn.commit()
         conn.close()
+    
+    # Admin functions
+    def get_all_users():
+        """Get all users for admin panel"""
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute('SELECT id, username, email, created_at FROM users ORDER BY created_at DESC')
+        users = cursor.fetchall()
+        conn.close()
+        return [dict(user) for user in users]
+    
+    def delete_user(user_id):
+        """Delete a user and their videos"""
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute('DELETE FROM users WHERE id = ?', (user_id,))
+        conn.commit()
+        conn.close()
+    
+    def delete_video(video_id):
+        """Delete a video"""
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute('DELETE FROM videos WHERE video_id = ?', (video_id,))
+        conn.commit()
+        conn.close()
+    
+    def get_stats():
+        """Get platform statistics"""
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT COUNT(*) as total_users FROM users')
+        total_users = cursor.fetchone()[0]
+        
+        cursor.execute('SELECT COUNT(*) as total_videos FROM videos')
+        total_videos = cursor.fetchone()[0]
+        
+        cursor.execute('SELECT COALESCE(SUM(views), 0) as total_views FROM videos')
+        total_views = cursor.fetchone()[0]
+        
+        conn.close()
+        return {
+            'total_users': total_users,
+            'total_videos': total_videos,
+            'total_views': total_views
+        }

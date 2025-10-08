@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Panel - WOOVB{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-b from-gray-900 via-purple-900/20 to-gray-900 py-8 px-4">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-4xl font-bold text-white mb-2">Admin Panel</h1>
+            <p class="text-gray-400">Manage your platform, users, and content</p>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <!-- Total Users -->
+            <div class="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm mb-1">Total Users</p>
+                        <p class="text-4xl font-bold text-white">{{ stats.total_users }}</p>
+                    </div>
+                    <div class="bg-purple-600/20 p-4 rounded-lg">
+                        <svg class="w-8 h-8 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Videos -->
+            <div class="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm mb-1">Total Videos</p>
+                        <p class="text-4xl font-bold text-white">{{ stats.total_videos }}</p>
+                    </div>
+                    <div class="bg-blue-600/20 p-4 rounded-lg">
+                        <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Views -->
+            <div class="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm mb-1">Total Views</p>
+                        <p class="text-4xl font-bold text-white">{{ stats.total_views }}</p>
+                    </div>
+                    <div class="bg-green-600/20 p-4 rounded-lg">
+                        <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="mb-6">
+            <div class="flex border-b border-white/10">
+                <button onclick="showTab('users')" id="users-tab" class="px-6 py-3 text-white font-medium border-b-2 border-purple-600">
+                    Users ({{ users|length }})
+                </button>
+                <button onclick="showTab('videos')" id="videos-tab" class="px-6 py-3 text-gray-400 font-medium hover:text-white transition-colors">
+                    Videos ({{ videos|length }})
+                </button>
+            </div>
+        </div>
+
+        <!-- Users Table -->
+        <div id="users-content" class="bg-white/5 backdrop-blur-lg rounded-xl border border-white/10 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-white/5">
+                        <tr>
+                            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-300">ID</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-300">Username</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-300">Email</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-300">Joined</th>
+                            <th class="px-6 py-4 text-center text-sm font-semibold text-gray-300">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-white/10">
+                        {% if users %}
+                            {% for user in users %}
+                            <tr class="hover:bg-white/5 transition-colors">
+                                <td class="px-6 py-4 text-sm text-white font-mono">{{ user.id }}</td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center">
+                                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center text-white font-bold mr-3">
+                                            {{ user.username[0].upper() }}
+                                        </div>
+                                        <span class="text-white font-medium">{{ user.username }}</span>
+                                        {% if user.id == 1 %}
+                                        <span class="ml-2 px-2 py-1 bg-purple-600/20 text-purple-400 text-xs font-semibold rounded-full">ADMIN</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-300">{{ user.email }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-400">{{ user.created_at.strftime('%b %d, %Y') if user.created_at else 'N/A' }}</td>
+                                <td class="px-6 py-4 text-center">
+                                    {% if user.id != 1 %}
+                                    <button onclick="deleteUser({{ user.id }}, '{{ user.username }}')" 
+                                            class="px-4 py-2 bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white rounded-lg transition-colors text-sm font-medium">
+                                        Delete
+                                    </button>
+                                    {% else %}
+                                    <span class="text-gray-500 text-sm">Protected</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="px-6 py-12 text-center text-gray-400">
+                                    No users found
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Videos Table -->
+        <div id="videos-content" class="hidden bg-white/5 backdrop-blur-lg rounded-xl border border-white/10 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-white/5">
+                        <tr>
+                            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-300">Video ID</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-300">Title</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-300">Uploader</th>
+                            <th class="px-6 py-4 text-center text-sm font-semibold text-gray-300">Views</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-300">Uploaded</th>
+                            <th class="px-6 py-4 text-center text-sm font-semibold text-gray-300">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-white/10">
+                        {% if videos %}
+                            {% for video in videos %}
+                            <tr class="hover:bg-white/5 transition-colors">
+                                <td class="px-6 py-4 text-sm text-purple-400 font-mono">{{ video.video_id }}</td>
+                                <td class="px-6 py-4">
+                                    <a href="{{ url_for('watch', video_id=video.video_id) }}" class="text-white font-medium hover:text-purple-400 transition-colors">
+                                        {{ video.title }}
+                                    </a>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-300">{{ video.username }}</td>
+                                <td class="px-6 py-4 text-center">
+                                    <span class="inline-flex items-center px-3 py-1 bg-blue-600/20 text-blue-400 rounded-full text-sm">
+                                        {{ video.views }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-400">{{ video.created_at.strftime('%b %d, %Y') if video.created_at else 'N/A' }}</td>
+                                <td class="px-6 py-4 text-center">
+                                    <button onclick="deleteVideo('{{ video.video_id }}', '{{ video.title }}')" 
+                                            class="px-4 py-2 bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white rounded-lg transition-colors text-sm font-medium">
+                                        Delete
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="px-6 py-12 text-center text-gray-400">
+                                    No videos found
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+// Tab switching
+function showTab(tab) {
+    const usersTab = document.getElementById('users-tab');
+    const videosTab = document.getElementById('videos-tab');
+    const usersContent = document.getElementById('users-content');
+    const videosContent = document.getElementById('videos-content');
+
+    if (tab === 'users') {
+        usersTab.classList.add('text-white', 'border-purple-600');
+        usersTab.classList.remove('text-gray-400');
+        videosTab.classList.remove('text-white', 'border-purple-600');
+        videosTab.classList.add('text-gray-400');
+        usersContent.classList.remove('hidden');
+        videosContent.classList.add('hidden');
+    } else {
+        videosTab.classList.add('text-white', 'border-purple-600');
+        videosTab.classList.remove('text-gray-400');
+        usersTab.classList.remove('text-white', 'border-purple-600');
+        usersTab.classList.add('text-gray-400');
+        videosContent.classList.remove('hidden');
+        usersContent.classList.add('hidden');
+    }
+}
+
+// Delete user
+function deleteUser(userId, username) {
+    if (confirm(`Are you sure you want to delete user "${username}"? This will also delete all their videos.`)) {
+        fetch(`/admin/delete-user/${userId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert('Error: ' + (data.error || 'Failed to delete user'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to delete user');
+        });
+    }
+}
+
+// Delete video
+function deleteVideo(videoId, title) {
+    if (confirm(`Are you sure you want to delete video "${title}"?`)) {
+        fetch(`/admin/delete-video/${videoId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert('Error: ' + (data.error || 'Failed to delete video'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to delete video');
+        });
+    }
+}
+</script>
+{% endblock %}
+

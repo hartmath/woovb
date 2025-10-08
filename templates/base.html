@@ -39,6 +39,9 @@
                 {% if session.user_id %}
                 <a href="{{ url_for('dashboard') }}" class="text-sm font-medium text-white/60 hover:text-white transition-colors">My Videos</a>
                 <a href="{{ url_for('videos') }}" class="text-sm font-medium text-white/60 hover:text-white transition-colors">Browse All</a>
+                {% if session.user_id == 1 %}
+                <a href="{{ url_for('admin_panel') }}" class="text-sm font-medium text-purple-400 hover:text-purple-300 transition-colors">Admin</a>
+                {% endif %}
                 {% endif %}
             </nav>
             <div class="flex items-center gap-4">
