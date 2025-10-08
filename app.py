@@ -19,6 +19,23 @@ app.config['ALLOWED_EXTENSIONS'] = {'mp4', 'avi', 'mov', 'mkv', 'webm', 'flv'}
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['THUMBNAIL_FOLDER'], exist_ok=True)
 
+# MIME type mapping
+MIME_TYPES = {
+    'mp4': 'video/mp4',
+    'webm': 'video/webm',
+    'ogg': 'video/ogg',
+    'avi': 'video/x-msvideo',
+    'mov': 'video/quicktime',
+    'mkv': 'video/x-matroska',
+    'flv': 'video/x-flv'
+}
+
+@app.template_filter('get_mime_type')
+def get_mime_type(filename):
+    """Get MIME type from filename extension"""
+    ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
+    return MIME_TYPES.get(ext, 'video/mp4')
+
 # Import database models and functions
 from database import init_db, create_user, get_user_by_email, create_video, get_all_videos, get_video_by_id, get_user_videos, increment_views, get_all_users, delete_user, delete_video, get_stats, get_user_by_id
 
@@ -231,10 +248,20 @@ def serve_video(filename):
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
+    # Get file extension and determine MIME type
+    file_ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
+    
     response = send_from_directory(app.config['UPLOAD_FOLDER'], filename)
-    # Add CORS headers for video streaming
+    
+    # Set proper MIME type
+    if file_ext in MIME_TYPES:
+        response.headers['Content-Type'] = MIME_TYPES[file_ext]
+    
+    # Add headers for video streaming
     response.headers['Accept-Ranges'] = 'bytes'
-    response.headers['Cache-Control'] = 'no-cache'
+    response.headers['Cache-Control'] = 'public, max-age=3600'
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    
     return response
 
 @app.route('/uploads/thumbnails/<filename>')
