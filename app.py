@@ -15,9 +15,13 @@ app.config['THUMBNAIL_FOLDER'] = 'uploads/thumbnails'
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max file size (PythonAnywhere limit)
 app.config['ALLOWED_EXTENSIONS'] = {'mp4', 'avi', 'mov', 'mkv', 'webm', 'flv'}
 
-# Create upload directories if they don't exist
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-os.makedirs(app.config['THUMBNAIL_FOLDER'], exist_ok=True)
+# Create upload directories if they don't exist (skip on Vercel/serverless)
+try:
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+    os.makedirs(app.config['THUMBNAIL_FOLDER'], exist_ok=True)
+except OSError:
+    # Read-only filesystem (Vercel) - use Supabase Storage instead
+    pass
 
 # MIME type mapping
 MIME_TYPES = {
